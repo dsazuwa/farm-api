@@ -1,4 +1,4 @@
-package com.farmapp.farm_api;
+package com.farmdesk.api;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
