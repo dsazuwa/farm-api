@@ -1,0 +1,4 @@
+flyway.url=jdbc:postgresql://localhost:5432/farm_db
+flyway.user=farm_dev
+flyway.password=
+flyway.locations=filesystem:src/main/resources/db/migration

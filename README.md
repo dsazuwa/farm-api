@@ -8,79 +8,155 @@
 
 ## Local Setup
 
-1. **Open the project**
+### 1. Open the project
 
-   Clone the repository and open the folder containing `pom.xml`
-   in IntelliJ IDEA. Allow Maven to import the dependencies.
+Clone the repository and open the folder containing `pom.xml` in
+IntelliJ IDEA. Allow Maven to import the dependencies.
 
-2. **Configure the database password**
+Set the **Project SDK** to Java 21 under
+**File → Project Structure → Project**.
 
-   Copy `.env.example` to `.env`:
+### 2. Configure environment variables
 
-   ```bash
-   cp .env.example .env
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Set `POSTGRES_PASSWORD` in `.env`.
+
+Docker Compose reads this file automatically. Spring Boot receives
+the password through its IntelliJ run configuration, configured below.
+
+### 3. Start PostgreSQL
+
+Start Docker Desktop, then run from the project root:
+
+```bash
+docker compose up -d
+```
+
+Check that the database is healthy:
+
+```bash
+docker compose ps
+```
+
+### 4. Configure Flyway
+
+Copy the example configuration:
+
+```bash
+cp flyway.conf.example flyway.conf
+```
+
+In `flyway.conf`, set `flyway.password` to the same value as
+`POSTGRES_PASSWORD` in `.env`.
+
+Flyway does not automatically read `.env`. Keep both `.env` and
+`flyway.conf` untracked; commit their example files instead.
+
+The Flyway Maven plugin must point to the local configuration file:
+
+```xml
+<configuration>
+    <configFiles>
+        <configFile>${project.basedir}/flyway.conf</configFile>
+    </configFiles>
+</configuration>
+```
+
+### 5. Create IntelliJ run configurations
+
+Open **Run → Edit Configurations** and create the following three
+configurations.
+
+#### Spring Boot Main App
+
+Starts the backend application.
+
+1. Click **+ → Spring Boot**.
+2. Set **Name** to `Spring Boot Main App`.
+3. Select the main application class annotated with
+   `@SpringBootApplication`.
+4. Select the application module under **Use classpath of module**.
+5. Set **JRE** to the project’s Java 21 SDK.
+6. Find **Environment variables**, under **Modify options** if hidden.
+7. Add `POSTGRES_PASSWORD` with the same value used in `.env`.
+8. Click **Apply**.
+
+If the Spring Boot configuration type is unavailable, use
+**Application** and select the same main class.
+
+#### Flyway Info
+
+Checks the database connection and displays applied and pending
+migrations. It does not apply migrations.
+
+1. Click **+ → Maven**.
+2. Set **Name** to `Flyway Info`.
+3. Set **Working directory** to the project root containing `pom.xml`.
+4. Set **Run / Command line** to:
+
+   ```text
+   flyway:info
    ```
 
-   Set `POSTGRES_PASSWORD` in `.env`.
+5. Ensure the Maven runner uses Java 21.
+6. Click **Apply**.
 
-3. **Start PostgreSQL**
+#### Flyway Migrate
 
-   Start Docker Desktop, then run from the project root:
+Applies pending database migrations.
 
-   ```bash
-   docker compose up -d
+1. Select the `Flyway Info` configuration.
+2. Click **Copy Configuration**.
+3. Change **Name** to `Flyway Migrate`.
+4. Change **Run / Command line** to:
+
+   ```text
+   flyway:migrate
    ```
 
-   Check that the database is healthy:
+5. Click **Apply → OK**.
 
-   ```bash
-   docker compose ps
-   ```
+### 6. Run migrations
 
-4. **Configure IntelliJ**
+Store migration scripts in:
 
-   Open **Run → Edit Configurations** and select the Spring Boot
-   application configuration.
+```text
+src/main/resources/db/migration/
+```
 
-   Find **Environment variables**, under **Modify options** if hidden.
-   Add `POSTGRES_PASSWORD` with the same value used in `.env`.
+Use versioned filenames with two underscores between the version
+and description:
 
-   The application reads it through:
+```text
+V1__create_farms.sql
+V2__create_memberships.sql
+```
 
-   ```properties
-   spring.datasource.password=${POSTGRES_PASSWORD}
-   ```
+With PostgreSQL running:
 
-   Docker Compose reads `.env` automatically. IntelliJ must also
-   provide the variable to the application.
+1. Select **Flyway Info** from IntelliJ’s run dropdown and click **Run**
+   to check the connection and migration status.
+2. Select **Flyway Migrate** and click **Run** to apply pending migrations.
 
-5. **Run the application**
+Run **Flyway Migrate** again whenever new migration scripts are added.
 
-   Apply the run configuration and run the main application class
-   using IntelliJ’s Run button.
+### 7. Start the application
 
-6. **Verify the application**
+Select **Spring Boot Main App** from IntelliJ’s run dropdown and
+click **Run**.
 
-   Confirm that the application starts successfully and connects
-   to PostgreSQL.
+Confirm that the application starts successfully and connects to
+PostgreSQL.
 
 ## Stop the Database
+
+Run from the project root:
 
 ```bash
 docker compose stop
 ```
-
-## Reference Documentation
-
-- [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-- [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/4.1.1/maven-plugin)
-- [Create an OCI image](https://docs.spring.io/spring-boot/4.1.1/maven-plugin/build-image.html)
-
-## Maven Parent Overrides
-
-Maven inherits elements from the parent POM, including `<license>`
-and `<developers>`. This project contains empty overrides to prevent
-inheriting those values.
-
-If you switch parent POMs and want to inherit these elements, remove
-the corresponding empty overrides.
