@@ -9,6 +9,8 @@ import com.farmdesk.api.sector.SectorRepository;
 import com.farmdesk.api.user.User;
 import com.farmdesk.api.user.UserRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,8 @@ import java.util.UUID;
 @Profile("dev")
 public class SeedData {
 
+  private static final Logger log =
+      LoggerFactory.getLogger(SeedData.class);
   private final UserRepository userRepository;
   private final FarmRepository farmRepository;
   private final MembershipRepository membershipRepository;
@@ -84,8 +88,23 @@ public class SeedData {
   private User seedUser(String authId, String email) {
     UUID authUserId = UUID.fromString(authId);
 
-    return userRepository.findByAuthUserId(authUserId)
-        .orElseGet(() -> userRepository.save(new User(authUserId, email)));
+    Optional<User> existingUser =
+        userRepository.findByAuthUserId(authUserId);
+
+    if (existingUser.isPresent()) {
+      User user = existingUser.get();
+
+      log.debug("Skipping existing seed user: id={}, email={}",
+          user.getId(), user.getEmail());
+
+      return user;
+    }
+
+    User user = userRepository.save(new User(authUserId, email));
+    log.debug("Created seed user: id={}, email={}",
+        user.getId(), user.getEmail());
+
+    return user;
   }
 
   private Farm seedFarm(User owner, String name, String city, String state) {
@@ -96,8 +115,11 @@ public class SeedData {
 
       Optional<Farm> farm = farmRepository.findById(membership.getFarmId());
 
-      if (farm.isPresent() && Objects.equals(farm.get().getName(), name))
+      if (farm.isPresent() && Objects.equals(farm.get().getName(), name)) {
+        log.debug("Skipping existing seed farm: id={}, name={}",
+            farm.get().getId(), name);
         return farm.get();
+      }
     }
 
     Farm farm = new Farm(name);
@@ -106,12 +128,18 @@ public class SeedData {
 
     Farm savedFarm = farmRepository.save(farm);
 
+    log.debug("Created seed farm: id={}, name={}",
+        savedFarm.getId(), savedFarm.getName());
+
     membershipRepository.save(new Membership(
         owner.getId(),
         savedFarm.getId(),
         Membership.Role.owner,
         Membership.SectorAccessScope.all
     ));
+
+    log.debug("Created seed owner membership: user={}, farm={}",
+        owner.getEmail(), savedFarm.getName());
 
     return savedFarm;
   }
@@ -122,13 +150,21 @@ public class SeedData {
         user.getId()
     );
 
-    if (!exists)
-      membershipRepository.save(new Membership(
-          user.getId(),
-          farm.getId(),
-          role,
-          Membership.SectorAccessScope.all
-      ));
+    if (exists) {
+      log.debug("Skipping existing seed membership: user={}, farm={}, role={}",
+          user.getEmail(), farm.getName(), role);
+      return;
+    }
+
+    membershipRepository.save(new Membership(
+        user.getId(),
+        farm.getId(),
+        role,
+        Membership.SectorAccessScope.all
+    ));
+
+    log.debug("Created seed membership: user={}, farm={}, role={}",
+        user.getEmail(), farm.getName(), role);
   }
 
   private void seedSector(Farm farm, Sector.Type type) {
@@ -136,6 +172,17 @@ public class SeedData {
         farm.getId(), type.toString(), type
     );
 
-    if (!exists) sectorRepository.save(new Sector(farm.getId(), type));
+    if (exists) {
+      log.debug("Skipping existing seed sector: farm={}, type={}",
+          farm.getName(), type);
+      return;
+    }
+
+    Sector savedSector = sectorRepository.save(new Sector(farm.getId(), type));
+
+    log.debug("Created seed sector: id={}, farm={}, type={}",
+        savedSector.getId(), farm.getName(), type);
   }
+
+
 }
