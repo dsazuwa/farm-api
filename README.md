@@ -84,10 +84,17 @@ Starts the backend application.
 5. Set **JRE** to the project’s Java 21 SDK.
 6. Find **Environment variables**, under **Modify options** if hidden.
 7. Add `POSTGRES_PASSWORD` with the same value used in `.env`.
-8. Click **Apply**.
+8. Find Program arguments, under Modify options if hidden, and add:
+   ```text
+   --spring.profiles.active=dev
+   ```
 
-If the Spring Boot configuration type is unavailable, use
-**Application** and select the same main class.
+   The dev profile loads application-dev.properties and enables
+   development seeding. To start without seeding, use:
+      ```text
+      --spring.profiles.active=dev --app.seed.enabled=false
+      ```
+9. Click **Apply**.
 
 #### Flyway Info
 

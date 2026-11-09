@@ -54,6 +54,12 @@ public class Sector {
     setName(name);
   }
 
+  public Sector(UUID farmId, Type type) {
+    this.farmId = Objects.requireNonNull(farmId, "Farm ID is required");
+    this.type = Objects.requireNonNull(type, "Sector type is required");
+    setName(type.toString());
+  }
+
   public UUID getId() {
     return id;
   }

@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface SectorRepository extends JpaRepository<Sector, UUID> {
+
+  boolean existsByFarmIdAndNameAndType(UUID farmId, String name, Sector.Type type);
 }
