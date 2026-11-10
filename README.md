@@ -13,8 +13,7 @@
 Clone the repository and open the folder containing `pom.xml` in
 IntelliJ IDEA. Allow Maven to import the dependencies.
 
-Set the **Project SDK** to Java 21 under
-**File → Project Structure → Project**.
+Set the **Project SDK** to Java 21 under **File → Project Structure → Project**.
 
 ### 2. Configure environment variables
 
@@ -31,8 +30,27 @@ Use the same Supabase project as the React app.
 
 The backend requires:
 
-- `POSTGRES_PASSWORD`: local Docker database password.
-- `SUPABASE_URL`: Supabase project URL.
+```dotenv
+POSTGRES_PASSWORD=your_local_database_password
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+
+SEED_PATRICK_AUTH_ID=actual_supabase_user_uuid
+SEED_NELSON_AUTH_ID=actual_supabase_user_uuid
+SEED_DANIELLE_AUTH_ID=actual_supabase_user_uuid
+SEED_OKPARA_AUTH_ID=actual_supabase_user_uuid
+```
+
+For development seeding, create these confirmed user accounts under **Supabase →
+Authentication → Users**:
+
+| Account  |         Email          |    Environment variable |
+|:---------|:----------------------:|------------------------:|
+| Patrick  | `patrick@example.com`  |  `SEED_PATRICK_AUTH_ID` |
+| Nelson   |  `nelson@example.com`  |   `SEED_NELSON_AUTH_ID` |
+| Danielle | `danielle@example.com` | `SEED_DANIELLE_AUTH_ID` |
+| Okpara   |  `okpara@example.com`  |   `SEED_OKPARA_AUTH_ID` |
+
+Copy each account's User UID into its corresponding value in `.env`
 
 ### 3. Start PostgreSQL
 
@@ -65,6 +83,7 @@ Flyway does not automatically read `.env`. Keep both `.env` and
 The Flyway Maven plugin must point to the local configuration file:
 
 ```xml
+
 <configuration>
     <configFiles>
         <configFile>${project.basedir}/flyway.conf</configFile>
@@ -88,7 +107,8 @@ Starts the backend application.
 4. Select the application module under **Use classpath of module**.
 5. Set **JRE** to the project’s Java 21 SDK.
 6. Find **Environment variables**, under **Modify options** if hidden.
-7. Add `POSTGRES_PASSWORD` and `SUPABASE_URL` with the same values used in `.env`.
+7. Add `POSTGRES_PASSWORD` and `SUPABASE_URL` with the same values used in
+   `.env`.
 8. Find Program arguments, under Modify options if hidden, and add:
    ```text
    --spring.profiles.active=dev

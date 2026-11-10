@@ -11,6 +11,7 @@ import com.farmdesk.api.user.UserRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -30,39 +31,38 @@ public class SeedData {
   private final MembershipRepository membershipRepository;
   private final SectorRepository sectorRepository;
 
+  private final UUID patrickAuthId;
+  private final UUID nelsonAuthId;
+  private final UUID danielleAuthId;
+  private final UUID okparaAuthId;
+
   public SeedData(
       UserRepository userRepository,
       FarmRepository farmRepository,
       MembershipRepository membershipRepository,
-      SectorRepository sectorRepository
+      SectorRepository sectorRepository,
+      @Value("${app.seed.users.patrick.auth-id}") UUID patrickAuthId,
+      @Value("${app.seed.users.nelson.auth-id}") UUID nelsonAuthId,
+      @Value("${app.seed.users.danielle.auth-id}") UUID danielleAuthId,
+      @Value("${app.seed.users.okpara.auth-id}") UUID okparaAuthId
   ) {
     this.userRepository = userRepository;
     this.farmRepository = farmRepository;
     this.membershipRepository = membershipRepository;
     this.sectorRepository = sectorRepository;
+
+    this.patrickAuthId = patrickAuthId;
+    this.nelsonAuthId = nelsonAuthId;
+    this.danielleAuthId = danielleAuthId;
+    this.okparaAuthId = okparaAuthId;
   }
 
   @Transactional
   public void seed() {
-    User patrick = seedUser(
-        "20000000-0000-4000-8000-000000000001",
-        "patrick@example.com"
-    );
-
-    User okpara = seedUser(
-        "20000000-0000-4000-8000-000000000002",
-        "okpara@example.com"
-    );
-
-    User danielle = seedUser(
-        "20000000-0000-4000-8000-000000000003",
-        "danielle@example.com"
-    );
-
-    User nelson = seedUser(
-        "20000000-0000-4000-8000-000000000004",
-        "nelson@example.com"
-    );
+    User patrick = seedUser(patrickAuthId, "patrick@example.com");
+    User nelson = seedUser(nelsonAuthId, "nelson@example.com");
+    User danielle = seedUser(danielleAuthId, "danielle@example.com");
+    User okpara = seedUser(okparaAuthId, "okpara@example.com");
 
     Farm afumnaza = seedFarm(patrick, "Afumnaza Farm", "Asaba", "Delta");
     Farm okparaFarm = seedFarm(okpara, "Okpara Layers", "Ughelli", "Delta");
@@ -85,9 +85,7 @@ public class SeedData {
     seedSector(farmFresh, Sector.Type.fishery);
   }
 
-  private User seedUser(String authId, String email) {
-    UUID authUserId = UUID.fromString(authId);
-
+  private User seedUser(UUID authUserId, String email) {
     Optional<User> existingUser =
         userRepository.findByAuthUserId(authUserId);
 
