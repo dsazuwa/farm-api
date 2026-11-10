@@ -24,10 +24,15 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Set `POSTGRES_PASSWORD` in `.env`.
+React uses Supabase Auth for login. Spring Boot validates the access
+tokens, while application data remains in local Docker PostgreSQL.
 
-Docker Compose reads this file automatically. Spring Boot receives
-the password through its IntelliJ run configuration, configured below.
+Use the same Supabase project as the React app.
+
+The backend requires:
+
+- `POSTGRES_PASSWORD`: local Docker database password.
+- `SUPABASE_URL`: Supabase project URL.
 
 ### 3. Start PostgreSQL
 
@@ -83,7 +88,7 @@ Starts the backend application.
 4. Select the application module under **Use classpath of module**.
 5. Set **JRE** to the project’s Java 21 SDK.
 6. Find **Environment variables**, under **Modify options** if hidden.
-7. Add `POSTGRES_PASSWORD` with the same value used in `.env`.
+7. Add `POSTGRES_PASSWORD` and `SUPABASE_URL` with the same values used in `.env`.
 8. Find Program arguments, under Modify options if hidden, and add:
    ```text
    --spring.profiles.active=dev
